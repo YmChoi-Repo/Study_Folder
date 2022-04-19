@@ -1,0 +1,50 @@
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=b5c003de0421fade00e68efc6fb912da&libraries=services"></script>
+        <script>
+            // 다중마커 예제, 지도 생성 및 리스트 형태로 지도를 검색하여 마커 찍기
+            var mapContainer = document.getElementById('maps');
+            var mapOption = {
+                center: new kakao.maps.LatLng(33.450701, 126.570667),
+                level: 7
+            };
+            var map = new kakao.maps.Map(mapContainer, mapOption);
+            var geocoder = new kakao.maps.services.Geocoder();
+            // 지역구에 해당하는 판매 주소지의 다중 검색을 위해 listData에 담음
+            var listData = [
+                <% for(NoticeDTO adr : rList) { %>
+                '<%=CmmUtil.nvl(adr.getGoods_addr2())%>',
+                <% } %>];
+            listData.forEach(function(addr, index) {
+                geocoder.addressSearch(addr, function(result, status) {
+                    if (status === kakao.maps.services.Status.OK) {
+                        var coords = new kakao.maps.LatLng(result[0].y, result[0].x);
+                        // 마커 이미지의 이미지 주소입니다
+                        var imageSrc = "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png";
+                        // 마커 이미지의 이미지 크기 입니다
+                        var imageSize = new kakao.maps.Size(24, 35);
+                        // 마커 이미지를 생성합니다
+                        var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
+                        var marker = new kakao.maps.Marker({
+                            map: map,
+                            position: coords,
+                            image : markerImage //마커 이미지
+                        });
+                        var iwRemoveable = true;
+                        var infowindow = new kakao.maps.InfoWindow({
+                            content: '<div style="width:150px;text-align:center;padding:6px 0; font-family: \'Poor Story\'">' + listData[index] + '<button class="btn view-btn3 fontPoor ml-1" id="btn"> 검색</button></div>',
+                            disableAutoPan: true,
+                            removable : iwRemoveable
+                        });
+                        /*infowindow.open(map, marker);*/
+                        // 마커에 클릭이벤트를 등록합니다
+                        kakao.maps.event.addListener(marker, 'click', function() {
+                            // 마커 위에 인포윈도우를 표시합니다
+                            infowindow.open(map, marker);
+                            $("#btn").on("click", function() {
+                                location.href="/searchList.do?nowPage=1&cntPerPage=9&searchType=J&keyword=" + listData[index];
+                            })
+                        });
+                        map.setCenter(coords);
+                    }
+                });
+            });
+        </script>
